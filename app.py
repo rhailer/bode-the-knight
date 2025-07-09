@@ -1,10 +1,10 @@
 import streamlit as st
 import time
 from story_data import STORY_DATA
-from image_generator import generate_story_images, EMOJI_FALLBACK
+from image_generator import generate_story_images, get_fallback_emojis
 import random
 
-# Configure page with dark theme
+# Configure page
 st.set_page_config(
     page_title="Bode the Knight",
     page_icon="⚔️",
@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for dark mode and sleek design
+# Dark mode CSS
 st.markdown("""
 <style>
     .stApp {
@@ -81,6 +81,8 @@ st.markdown("""
         cursor: pointer;
         transition: all 0.3s;
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        width: 100%;
+        min-height: 80px;
     }
     
     .stButton > button:hover {
@@ -90,6 +92,23 @@ st.markdown("""
     
     .stProgress > div > div > div {
         background: linear-gradient(90deg, #FFD700, #FFA500);
+    }
+    
+    .image-container {
+        border: 3px solid #FFD700;
+        border-radius: 15px;
+        padding: 10px;
+        margin: 10px 0;
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .emoji-display {
+        font-size: 4em;
+        text-align: center;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        margin: 10px 0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -103,69 +122,58 @@ if 'game_over' not in st.session_state:
     st.session_state.game_over = False
 if 'game_won' not in st.session_state:
     st.session_state.game_won = False
-if 'use_ai_images' not in st.session_state:
-    st.session_state.use_ai_images = True
 if 'current_images' not in st.session_state:
     st.session_state.current_images = None
+if 'use_ai' not in st.session_state:
+    st.session_state.use_ai = True
 
 def reset_game():
-    """Reset the game to beginning"""
+    """Reset the game"""
     st.session_state.current_story = 0
     st.session_state.prizes = []
     st.session_state.game_over = False
     st.session_state.game_won = False
     st.session_state.current_images = None
 
-def load_story_images():
+def load_images():
     """Load images for current story"""
     if st.session_state.current_images is None:
-        current_story_data = STORY_DATA[st.session_state.current_story]
+        current_data = STORY_DATA[st.session_state.current_story]
         
-        if st.session_state.use_ai_images and "OPENAI_API_KEY" in st.secrets:
+        # Try AI first
+        if st.session_state.use_ai:
             with st.spinner("🎨 Creating magical images..."):
-                images = generate_story_images(
-                    current_story_data["text"],
-                    current_story_data["correct_concept"],
-                    current_story_data["wrong_concepts"]
+                ai_images = generate_story_images(
+                    current_data["text"],
+                    current_data["correct_concept"],
+                    current_data["wrong_concepts"]
                 )
                 
-                if images:
-                    # Shuffle so correct answer isn't always first
-                    random.shuffle(images)
-                    st.session_state.current_images = images
+                if ai_images:
+                    st.session_state.current_images = ai_images
+                    return
                 else:
-                    st.session_state.use_ai_images = False
-                    st.warning("Falling back to emoji mode...")
+                    st.session_state.use_ai = False
+                    st.info("Using emoji mode for better performance!")
         
-        # Fallback to emoji mode
-        if not st.session_state.use_ai_images:
-            # Create emoji fallback
-            concepts = [current_story_data["correct_concept"]] + current_story_data["wrong_concepts"]
-            emoji_options = ["🏰", "🛡️", "🍳"]  # Default emojis
-            
-            st.session_state.current_images = [
-                {
-                    'emoji': emoji_options[i % len(emoji_options)],
-                    'concept': concepts[i],
-                    'is_correct': i == 0
-                } for i in range(3)
-            ]
-            random.shuffle(st.session_state.current_images)
+        # Fallback to emojis
+        emoji_options = get_fallback_emojis(st.session_state.current_story)
+        st.session_state.current_images = emoji_options
 
 def correct_answer():
     """Handle correct answer"""
-    current_prize = STORY_DATA[st.session_state.current_story]["prize"]
-    st.session_state.prizes.append(current_prize)
+    prize = STORY_DATA[st.session_state.current_story]["prize"]
+    st.session_state.prizes.append(prize)
     
-    st.success("🎉 Excellent reading! You earned: " + current_prize)
-    time.sleep(1)
+    st.success(f"🎉 Excellent reading! You earned: {prize}")
     
     if st.session_state.current_story < len(STORY_DATA) - 1:
         st.session_state.current_story += 1
-        st.session_state.current_images = None  # Reset images for next story
+        st.session_state.current_images = None
     else:
         st.session_state.game_won = True
     
+    time.sleep(1)
     st.rerun()
 
 def wrong_answer():
@@ -196,21 +204,20 @@ if st.session_state.game_won:
         st.write(f"**{i}.** {prize}")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.button("🔄 New Adventure", key="play_again_won"):
+    if st.button("🔄 New Adventure"):
         reset_game()
         st.rerun()
-    
     st.stop()
 
 # Game Over Screen
 if st.session_state.game_over:
-    st.markdown("""
+    st.markdown(f"""
     <div class="game-over-screen">
         <h2>🏰 Bode has returned home!</h2>
         <h3>Every knight needs practice! Try again!</h3>
-        <p><strong>You made it to story {} of {}</strong></p>
+        <p><strong>You made it to story {st.session_state.current_story + 1} of {len(STORY_DATA)}</strong></p>
     </div>
-    """.format(st.session_state.current_story + 1, len(STORY_DATA)), unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
     if st.session_state.prizes:
         st.markdown('<div class="prize-bag">', unsafe_allow_html=True)
@@ -219,61 +226,57 @@ if st.session_state.game_over:
             st.write(f"• {prize}")
         st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.button("🔄 Try Again", key="try_again"):
+    if st.button("🔄 Try Again"):
         reset_game()
         st.rerun()
-    
     st.stop()
 
-# Main Game Screen
-current_story_data = STORY_DATA[st.session_state.current_story]
+# Main Game
+current_data = STORY_DATA[st.session_state.current_story]
 
-# Progress indicator
+# Progress
 progress = (st.session_state.current_story + 1) / len(STORY_DATA)
 st.progress(progress)
 st.markdown(f"**Quest Progress: {st.session_state.current_story + 1} of {len(STORY_DATA)}**")
 
-# Story text
+# Story
 st.markdown(f"""
 <div class="story-text">
     <h3>📖 The Story:</h3>
-    <p style="font-size: 1.3em; color: #FFD700;"><strong>{current_story_data['text']}</strong></p>
+    <p style="font-size: 1.3em; color: #FFD700;"><strong>{current_data['text']}</strong></p>
 </div>
 """, unsafe_allow_html=True)
 
-# Load images for current story
-load_story_images()
+# Load images
+load_images()
 
 # Instructions
 st.markdown("### 🎯 Which picture matches the story?")
 
-# Display images
+# Display options
 if st.session_state.current_images:
     col1, col2, col3 = st.columns(3)
     
-    for i, (col, image_data) in enumerate(zip([col1, col2, col3], st.session_state.current_images)):
+    for i, (col, item) in enumerate(zip([col1, col2, col3], st.session_state.current_images)):
         with col:
-            if st.session_state.use_ai_images and 'image' in image_data:
-                st.image(image_data['image'], use_column_width=True)
-                if st.button(f"Choose Picture {i+1}", key=f"btn_{i}_{st.session_state.current_story}"):
-                    if image_data['is_correct']:
-                        correct_answer()
-                    else:
-                        wrong_answer()
-            else:
-                # Emoji fallback
-                if st.button(image_data['emoji'], key=f"btn_{i}_{st.session_state.current_story}"):
-                    if image_data['is_correct']:
-                        correct_answer()
-                    else:
-                        wrong_answer()
+            if 'image' in item:  # AI image
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                st.image(item['image'], use_column_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+            else:  # Emoji
+                st.markdown(f'<div class="emoji-display">{item["emoji"]}</div>', unsafe_allow_html=True)
+            
+            if st.button(f"Choose {i+1}", key=f"btn_{i}"):
+                if item['is_correct']:
+                    correct_answer()
+                else:
+                    wrong_answer()
 
-# Show current prize bag
+# Prize bag
 if st.session_state.prizes:
     st.markdown('<div class="prize-bag">', unsafe_allow_html=True)
     st.markdown("### 🎒 Your Prize Bag:")
-    prize_text = " | ".join(st.session_state.prizes)
-    st.markdown(f"**{prize_text}**")
+    st.markdown(" | ".join(st.session_state.prizes))
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Reset button

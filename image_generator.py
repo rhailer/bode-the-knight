@@ -3,71 +3,93 @@ import streamlit as st
 import requests
 from PIL import Image
 import io
+import random
 
 def generate_story_images(story_text, correct_concept, wrong_concepts):
-    """
-    Generate 3 images for a story: 1 correct and 2 wrong options
-    All in Batman Animated Series style
-    """
+    """Generate 3 images for a story using OpenAI DALL-E"""
     
-    # Set up OpenAI client
-    client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-    
-    base_style = "in the style of Batman the Animated Series, dark atmospheric art style, animated cartoon style, dramatic lighting, art deco influences"
-    
-    images = []
-    concepts = [correct_concept] + wrong_concepts
-    
-    for i, concept in enumerate(concepts):
-        try:
-            prompt = f"{concept}, {base_style}, high quality digital art, clean composition, suitable for children"
-            
-            response = client.images.generate(
-                model="dall-e-3",
-                prompt=prompt,
-                size="1024x1024",
-                quality="standard",
-                n=1,
-            )
-            
-            image_url = response.data[0].url
-            
-            # Download and convert to PIL Image
-            img_response = requests.get(image_url)
-            img = Image.open(io.BytesIO(img_response.content))
-            
-            images.append({
-                'image': img,
-                'concept': concept,
-                'is_correct': i == 0  # First image is always correct
-            })
-            
-        except Exception as e:
-            st.error(f"Error generating image for {concept}: {str(e)}")
+    try:
+        # Check if API key exists
+        if "OPENAI_API_KEY" not in st.secrets:
             return None
-    
-    return images
+            
+        client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+        
+        base_style = "Batman Animated Series art style, dark atmospheric cartoon, clean simple composition, suitable for children"
+        
+        images = []
+        all_concepts = [correct_concept] + wrong_concepts
+        
+        for i, concept in enumerate(all_concepts):
+            try:
+                prompt = f"{concept}, {base_style}"
+                
+                response = client.images.generate(
+                    model="dall-e-3",
+                    prompt=prompt,
+                    size="1024x1024",
+                    quality="standard",
+                    n=1,
+                )
+                
+                image_url = response.data[0].url
+                img_response = requests.get(image_url, timeout=30)
+                img = Image.open(io.BytesIO(img_response.content))
+                
+                images.append({
+                    'image': img,
+                    'is_correct': i == 0,
+                    'concept': concept
+                })
+                
+            except Exception as e:
+                st.warning(f"Failed to generate image: {str(e)}")
+                return None
+        
+        # Shuffle so correct answer isn't always first
+        random.shuffle(images)
+        return images
+        
+    except Exception as e:
+        st.warning(f"AI image generation failed: {str(e)}")
+        return None
 
-# Fallback emoji system (if API fails)
-EMOJI_FALLBACK = {
-    "castle bedroom": "🏰",
-    "shiny armor": "🛡️",
-    "breakfast table": "🍳",
-    "messenger scroll": "📜",
-    "fire-breathing dragon": "🐉",
-    "white horse": "🐎",
-    "green forest": "🌲",
-    "wooden bridge": "🌉",
-    "rocky mountain": "⛰️",
-    "storm clouds": "⛈️",
-    "dragon cave": "🕳️",
-    "hot fire": "🔥",
-    "sword fighting": "⚔️",
-    "defeated dragon": "🐉",
-    "celebrating people": "🎉",
-    "special medal": "🏅",
-    "home castle": "🏠",
-    "family hugs": "🤗",
-    "peaceful sleep": "💤",
-    "knight crown": "👑"
+# Emoji fallback mapping
+STORY_EMOJIS = {
+    0: ["🏰", "🌳", "🚗"],
+    1: ["🛡️", "👕", "🎩"],
+    2: ["🍳", "📺", "🛏️"],
+    3: ["📜", "📱", "🎮"],
+    4: ["🐉", "🐶", "🦋"],
+    5: ["🐎", "🚲", "🚗"],
+    6: ["🌲", "🏢", "🏖️"],
+    7: ["🌉", "🛣️", "✈️"],
+    8: ["⛰️", "🏠", "🏊"],
+    9: ["⛈️", "☀️", "🌈"],
+    10: ["🕳️", "🏠", "🏬"],
+    11: ["🔥", "❄️", "💧"],
+    12: ["⚔️", "🥄", "✏️"],
+    13: ["🐉", "🦅", "🐛"],
+    14: ["🎉", "😢", "😴"],
+    15: ["🏅", "🍎", "📚"],
+    16: ["🏠", "🏪", "🏫"],
+    17: ["🤗", "👋", "🤝"],
+    18: ["💤", "👀", "🍽️"],
+    19: ["👑", "😔", "❓"]
 }
+
+def get_fallback_emojis(story_index):
+    """Get emoji fallback for a story"""
+    if story_index in STORY_EMOJIS:
+        emojis = STORY_EMOJIS[story_index].copy()
+        random.shuffle(emojis)
+        return [
+            {'emoji': emojis[0], 'is_correct': True},
+            {'emoji': emojis[1], 'is_correct': False},
+            {'emoji': emojis[2], 'is_correct': False}
+        ]
+    return [
+        {'emoji': '🎯', 'is_correct': True},
+        {'emoji': '❌', 'is_correct': False},
+        {'emoji': '❓', 'is_correct': False}
+    ]
