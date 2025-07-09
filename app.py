@@ -135,26 +135,47 @@ def reset_game():
     st.session_state.game_won = False
     st.session_state.current_images = None
 
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def cached_generate_images(story_index, text, correct, wrong1, wrong2):
+    """Cached version of image generation"""
+    return generate_story_images(text, correct, [wrong1, wrong2])
+
 def load_images():
-    """Load images for current story"""
+    """Load images for current story with caching"""
     if st.session_state.current_images is None:
         current_data = STORY_DATA[st.session_state.current_story]
         
-        # Try AI first
+        # Try AI with caching
         if st.session_state.use_ai:
-            with st.spinner("🎨 Creating magical images..."):
-                ai_images = generate_story_images(
-                    current_data["text"],
-                    current_data["correct_concept"],
-                    current_data["wrong_concepts"]
-                )
-                
-                if ai_images:
-                    st.session_state.current_images = ai_images
-                    return
-                else:
-                    st.session_state.use_ai = False
-                    st.info("Using emoji mode for better performance!")
+            # Show a more specific loading message
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            status_text.text("🎨 Creating magical images...")
+            progress_bar.progress(25)
+            
+            ai_images = cached_generate_images(
+                st.session_state.current_story,
+                current_data["text"],
+                current_data["correct_concept"],
+                current_data["wrong_concepts"][0],
+                current_data["wrong_concepts"][1]
+            )
+            
+            progress_bar.progress(75)
+            
+            if ai_images:
+                st.session_state.current_images = ai_images
+                progress_bar.progress(100)
+                status_text.text("✨ Images ready!")
+                time.sleep(0.5)
+                progress_bar.empty()
+                status_text.empty()
+                return
+            else:
+                st.session_state.use_ai = False
+                progress_bar.empty()
+                status_text.empty()
         
         # Fallback to emojis
         emoji_options = get_fallback_emojis(st.session_state.current_story)
@@ -253,20 +274,31 @@ load_images()
 # Instructions
 st.markdown("### 🎯 Which picture matches the story?")
 
-# Display options
+# Display options with better formatting
 if st.session_state.current_images:
     col1, col2, col3 = st.columns(3)
     
     for i, (col, item) in enumerate(zip([col1, col2, col3], st.session_state.current_images)):
         with col:
             if 'image' in item:  # AI image
-                st.markdown('<div class="image-container">', unsafe_allow_html=True)
                 st.image(item['image'], use_column_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-            else:  # Emoji
-                st.markdown(f'<div class="emoji-display">{item["emoji"]}</div>', unsafe_allow_html=True)
+            else:  # Emoji fallback
+                st.markdown(f"""
+                <div style="
+                    font-size: 4em; 
+                    text-align: center; 
+                    padding: 40px 20px; 
+                    background: rgba(255, 255, 255, 0.1); 
+                    border-radius: 15px; 
+                    margin: 10px 0;
+                    border: 2px solid #FFD700;
+                ">
+                    {item["emoji"]}
+                </div>
+                """, unsafe_allow_html=True)
             
-            if st.button(f"Choose {i+1}", key=f"btn_{i}"):
+            # Button with better spacing
+            if st.button(f"Choose Picture {i+1}", key=f"btn_{i}", use_container_width=True):
                 if item['is_correct']:
                     correct_answer()
                 else:
