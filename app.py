@@ -118,46 +118,42 @@ def reset_game():
     st.session_state.game_won = False
     st.session_state.current_images = None
 
+from smart_cache import load_cached_story, generate_and_cache_story, is_story_cached, get_cache_stats
+
 def load_images():
-    """Load images for current story"""
+    """Load images with smart caching"""
     if st.session_state.current_images is None:
         current_data = STORY_DATA[st.session_state.current_story]
+        story_index = st.session_state.current_story
         
-        # Try AI first
-        if st.session_state.use_ai:
-            progress_bar = st.progress(0)
-            status_text = st.empty()
+        # Try cached images first (instant!)
+        if is_story_cached(story_index):
+            st.success("⚡ Loading from cache...")
+            cached_images = load_cached_story(story_index)
             
-            try:
-                status_text.text("🎨 Creating magical images...")
-                progress_bar.progress(25)
-                
-                ai_images = generate_story_images(
-                    current_data["text"],
+            if cached_images:
+                st.session_state.current_images = cached_images
+                return
+        
+        # Generate and cache new images
+        if st.session_state.use_ai:
+            with st.spinner("🎨 Creating and saving magical images..."):
+                success = generate_and_cache_story(
+                    story_index,
                     current_data["correct_concept"],
                     current_data["wrong_concepts"]
                 )
                 
-                progress_bar.progress(75)
-                
-                if ai_images:
-                    st.session_state.current_images = ai_images
-                    progress_bar.progress(100)
-                    status_text.text("✨ Images ready!")
-                    time.sleep(0.5)
-                    progress_bar.empty()
-                    status_text.empty()
-                    return
+                if success:
+                    # Load the newly cached images
+                    cached_images = load_cached_story(story_index)
+                    if cached_images:
+                        st.session_state.current_images = cached_images
+                        st.success("✨ Images created and saved for next time!")
+                        return
                 else:
                     st.session_state.use_ai = False
-                    progress_bar.empty()
-                    status_text.empty()
-                    st.info("Using emoji mode for better performance!")
-            except Exception as e:
-                st.session_state.use_ai = False
-                progress_bar.empty()
-                status_text.empty()
-                st.warning(f"Switching to emoji mode: {str(e)}")
+                    st.info("Switching to emoji mode")
         
         # Fallback to emojis
         emoji_options = get_fallback_emojis(st.session_state.current_story)
@@ -242,6 +238,11 @@ progress = (st.session_state.current_story + 1) / len(STORY_DATA)
 st.progress(progress)
 st.markdown(f"**Quest Progress: {st.session_state.current_story + 1} of {len(STORY_DATA)}**")
 
+# Show cache statistics
+cache_stats = get_cache_stats()
+if cache_stats['cached_stories'] > 0:
+    st.info(f"⚡ {cache_stats['cached_stories']}/20 stories cached for instant loading! ({cache_stats['percentage']:.0f}%)")
+    
 # Story
 st.markdown(f"""
 <div class="story-text">
