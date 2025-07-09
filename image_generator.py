@@ -6,27 +6,31 @@ import io
 import random
 
 def generate_story_images(story_text, correct_concept, wrong_concepts):
-    """Generate 3 images with consistent style but different content"""
+    """Generate 3 images with consistent style"""
     
     try:
+        # Check for API key
         if "OPENAI_API_KEY" not in st.secrets:
+            st.warning("OpenAI API key not found. Using emoji mode.")
+            return None
+            
+        if not st.secrets["OPENAI_API_KEY"].startswith("sk-"):
+            st.warning("Invalid OpenAI API key format. Using emoji mode.")
             return None
             
         client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
         
-        # Consistent base style for all images
-        base_style = "Batman Animated Series art style, dark atmospheric cartoon, dramatic lighting, art deco influences, medieval fantasy setting, high contrast, clean composition, suitable for children"
+        base_style = "Batman Animated Series art style, dark atmospheric cartoon, dramatic lighting, medieval fantasy setting, clean composition, suitable for children"
         
-        # Create prompts that are similar but clearly different
+        # Create prompts
         prompts = [
             f"Medieval knight {correct_concept}, {base_style}",
-            f"Medieval knight {wrong_concepts[0]}, {base_style}",
+            f"Medieval knight {wrong_concepts[0]}, {base_style}", 
             f"Medieval knight {wrong_concepts[1]}, {base_style}"
         ]
         
         images = []
         
-        # Generate all images with consistent parameters
         for i, prompt in enumerate(prompts):
             try:
                 response = client.images.generate(
@@ -38,28 +42,28 @@ def generate_story_images(story_text, correct_concept, wrong_concepts):
                 )
                 
                 image_url = response.data[0].url
-                img_response = requests.get(image_url, timeout=20)
+                img_response = requests.get(image_url, timeout=15)
                 img = Image.open(io.BytesIO(img_response.content))
                 
-                # Resize for faster loading
+                # Resize for better performance
                 img = img.resize((400, 400), Image.Resampling.LANCZOS)
                 
                 images.append({
                     'image': img,
                     'is_correct': i == 0,
-                    'concept': prompts[i]
+                    'concept': prompt
                 })
                 
             except Exception as e:
-                st.error(f"Error generating image {i+1}: {str(e)}")
+                st.error(f"Failed to generate image {i+1}: {str(e)}")
                 return None
         
-        # Shuffle so correct answer isn't always first
+        # Shuffle images
         random.shuffle(images)
         return images
         
     except Exception as e:
-        st.warning(f"AI image generation failed: {str(e)}")
+        st.warning(f"AI generation failed: {str(e)}")
         return None
 
 # Enhanced emoji fallback
@@ -87,7 +91,7 @@ STORY_EMOJIS = {
 }
 
 def get_fallback_emojis(story_index):
-    """Get emoji fallback with consistent structure"""
+    """Get emoji fallback"""
     if story_index in STORY_EMOJIS:
         emojis = STORY_EMOJIS[story_index].copy()
         options = [

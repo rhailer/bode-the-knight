@@ -93,23 +93,6 @@ st.markdown("""
     .stProgress > div > div > div {
         background: linear-gradient(90deg, #FFD700, #FFA500);
     }
-    
-    .image-container {
-        border: 3px solid #FFD700;
-        border-radius: 15px;
-        padding: 10px;
-        margin: 10px 0;
-        background: rgba(255, 255, 255, 0.1);
-    }
-    
-    .emoji-display {
-        font-size: 4em;
-        text-align: center;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        margin: 10px 0;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -135,47 +118,46 @@ def reset_game():
     st.session_state.game_won = False
     st.session_state.current_images = None
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
-def cached_generate_images(story_index, text, correct, wrong1, wrong2):
-    """Cached version of image generation"""
-    return generate_story_images(text, correct, [wrong1, wrong2])
-
 def load_images():
-    """Load images for current story with caching"""
+    """Load images for current story"""
     if st.session_state.current_images is None:
         current_data = STORY_DATA[st.session_state.current_story]
         
-        # Try AI with caching
+        # Try AI first
         if st.session_state.use_ai:
-            # Show a more specific loading message
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            status_text.text("🎨 Creating magical images...")
-            progress_bar.progress(25)
-            
-            ai_images = cached_generate_images(
-                st.session_state.current_story,
-                current_data["text"],
-                current_data["correct_concept"],
-                current_data["wrong_concepts"][0],
-                current_data["wrong_concepts"][1]
-            )
-            
-            progress_bar.progress(75)
-            
-            if ai_images:
-                st.session_state.current_images = ai_images
-                progress_bar.progress(100)
-                status_text.text("✨ Images ready!")
-                time.sleep(0.5)
-                progress_bar.empty()
-                status_text.empty()
-                return
-            else:
+            try:
+                status_text.text("🎨 Creating magical images...")
+                progress_bar.progress(25)
+                
+                ai_images = generate_story_images(
+                    current_data["text"],
+                    current_data["correct_concept"],
+                    current_data["wrong_concepts"]
+                )
+                
+                progress_bar.progress(75)
+                
+                if ai_images:
+                    st.session_state.current_images = ai_images
+                    progress_bar.progress(100)
+                    status_text.text("✨ Images ready!")
+                    time.sleep(0.5)
+                    progress_bar.empty()
+                    status_text.empty()
+                    return
+                else:
+                    st.session_state.use_ai = False
+                    progress_bar.empty()
+                    status_text.empty()
+                    st.info("Using emoji mode for better performance!")
+            except Exception as e:
                 st.session_state.use_ai = False
                 progress_bar.empty()
                 status_text.empty()
+                st.warning(f"Switching to emoji mode: {str(e)}")
         
         # Fallback to emojis
         emoji_options = get_fallback_emojis(st.session_state.current_story)
@@ -274,14 +256,14 @@ load_images()
 # Instructions
 st.markdown("### 🎯 Which picture matches the story?")
 
-# Display options with better formatting
+# Display options with fixed formatting
 if st.session_state.current_images:
     col1, col2, col3 = st.columns(3)
     
     for i, (col, item) in enumerate(zip([col1, col2, col3], st.session_state.current_images)):
         with col:
             if 'image' in item:  # AI image
-                st.image(item['image'], use_column_width=True)
+                st.image(item['image'], width=300)  # Fixed width instead of use_column_width
             else:  # Emoji fallback
                 st.markdown(f"""
                 <div style="
@@ -292,6 +274,10 @@ if st.session_state.current_images:
                     border-radius: 15px; 
                     margin: 10px 0;
                     border: 2px solid #FFD700;
+                    min-height: 200px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 ">
                     {item["emoji"]}
                 </div>
