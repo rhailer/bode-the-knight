@@ -120,42 +120,25 @@ def reset_game():
 
 from smart_cache import load_cached_story, generate_and_cache_story, is_story_cached, get_cache_stats
 
+from local_image_loader import load_local_images, has_local_images, count_local_images
+from image_generator import get_fallback_emojis
+
 def load_images():
-    """Load images with smart caching"""
+    """Load images - local first, then fallback"""
     if st.session_state.current_images is None:
-        current_data = STORY_DATA[st.session_state.current_story]
         story_index = st.session_state.current_story
         
-        # Try cached images first (instant!)
-        if is_story_cached(story_index):
-            st.success("⚡ Loading from cache...")
-            cached_images = load_cached_story(story_index)
+        # Try local images first (instant!)
+        if has_local_images(story_index):
+            st.success("⚡ Loading high-quality images...")
+            local_images = load_local_images(story_index)
             
-            if cached_images:
-                st.session_state.current_images = cached_images
+            if local_images:
+                st.session_state.current_images = local_images
                 return
         
-        # Generate and cache new images
-        if st.session_state.use_ai:
-            with st.spinner("🎨 Creating and saving magical images..."):
-                success = generate_and_cache_story(
-                    story_index,
-                    current_data["correct_concept"],
-                    current_data["wrong_concepts"]
-                )
-                
-                if success:
-                    # Load the newly cached images
-                    cached_images = load_cached_story(story_index)
-                    if cached_images:
-                        st.session_state.current_images = cached_images
-                        st.success("✨ Images created and saved for next time!")
-                        return
-                else:
-                    st.session_state.use_ai = False
-                    st.info("Switching to emoji mode")
-        
-        # Fallback to emojis
+        # Fallback to emoji if no local images
+        st.info("📱 Using emoji mode - images not yet generated")
         emoji_options = get_fallback_emojis(st.session_state.current_story)
         st.session_state.current_images = emoji_options
 
@@ -238,11 +221,16 @@ progress = (st.session_state.current_story + 1) / len(STORY_DATA)
 st.progress(progress)
 st.markdown(f"**Quest Progress: {st.session_state.current_story + 1} of {len(STORY_DATA)}**")
 
+# Show local image availability
+local_count = count_local_images()
+if local_count > 0:
+    st.info(f"🎨 {local_count}/20 stories have high-quality AI images!")
+
 # Show cache statistics
 cache_stats = get_cache_stats()
 if cache_stats['cached_stories'] > 0:
     st.info(f"⚡ {cache_stats['cached_stories']}/20 stories cached for instant loading! ({cache_stats['percentage']:.0f}%)")
-    
+
 # Story
 st.markdown(f"""
 <div class="story-text">

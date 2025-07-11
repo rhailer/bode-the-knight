@@ -3,7 +3,7 @@ STORY_DATA = [
         "text": "Bode the Knight wakes up in his cozy castle bedroom.",
         "correct_concept": "waking up in a medieval castle bedroom with stone walls and morning sunlight",
         "wrong_concepts": [
-            "resting peacefully in the castle bedroom with closed eyes",
+            "reading a book while sitting on castle bedroom chair",  # CHANGED
             "waking up in a modern house bedroom with regular furniture"
         ],
         "prize": "⚔️ Iron Sword"
@@ -49,7 +49,7 @@ STORY_DATA = [
         "correct_concept": "placing a leather saddle carefully on a white horse",
         "wrong_concepts": [
             "riding the white horse that already has a saddle on",
-            "putting a saddle on a brown horse instead of white"
+            "feeding hay to a white horse in the stable"  # CHANGED
         ],
         "prize": "🗡️ Silver Sword"
     },
@@ -102,8 +102,8 @@ STORY_DATA = [
         "text": "The dragon roars loudly and breathes hot fire!",
         "correct_concept": "dragon making a loud roar while breathing bright orange fire",
         "wrong_concepts": [
-            "dragon sleeping quietly and peacefully in the cave",
-            "dragon breathing cold blue ice crystals instead of fire"
+            "dragon sitting quietly in the cave looking around",  # CHANGED
+            "dragon blowing gentle wind instead of fire"  # CHANGED
         ],
         "prize": "🛡️ Dragon Scale Shield"
     },
@@ -163,7 +163,7 @@ STORY_DATA = [
     },
     {
         "text": "That night, Bode dreams of his great adventure.",
-        "correct_concept": "knight sleeping peacefully in bed with dream clouds showing adventure",
+        "correct_concept": "knight lying in bed with dream clouds showing his adventure above",
         "wrong_concepts": [
             "knight sitting awake in bed instead of sleeping",
             "knight having scary nightmares instead of good dreams"
