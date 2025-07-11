@@ -12,86 +12,218 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Dark mode CSS
+# Custom CSS for Xbox-style gaming interface
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+    
     .stApp {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%),
+            linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f0f23 100%);
         color: white;
+        font-family: 'Orbitron', monospace;
+        overflow-x: hidden;
     }
     
     .main-title {
         text-align: center;
-        color: #FFD700;
-        font-size: 3em;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        background: linear-gradient(135deg, #00d4ff 0%, #ff6b6b 50%, #ffd700 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 3.5em;
+        font-weight: 900;
+        text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
         margin-bottom: 10px;
+        animation: glow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes glow {
+        from { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3)); }
+        to { filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8)); }
     }
     
     .subtitle {
         text-align: center;
-        color: #E6E6FA;
-        font-size: 1.2em;
+        color: #00d4ff;
+        font-size: 1.4em;
+        font-weight: 700;
         margin-bottom: 30px;
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
     }
     
     .story-text {
-        background: rgba(0, 0, 0, 0.3);
-        padding: 20px;
-        border-radius: 15px;
-        border: 2px solid #FFD700;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(26, 26, 46, 0.8) 100%);
+        padding: 25px;
+        border-radius: 20px;
+        border: 3px solid;
+        border-image: linear-gradient(135deg, #00d4ff, #ff6b6b, #ffd700) 1;
         margin: 20px 0;
-        font-size: 1.1em;
+        font-size: 1.2em;
         text-align: center;
+        box-shadow: 
+            0 8px 25px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .story-text::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
     }
     
     .prize-bag {
-        background: rgba(255, 215, 0, 0.1);
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #FFD700;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 107, 107, 0.2) 100%);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid #ffd700;
         margin: 20px 0;
+        box-shadow: 
+            0 4px 15px rgba(255, 215, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
     
     .victory-screen {
-        background: linear-gradient(45deg, #FFD700, #FFA500);
+        background: linear-gradient(135deg, #ff6b6b 0%, #ffd700 50%, #00d4ff 100%);
         color: #000;
-        padding: 30px;
-        border-radius: 20px;
+        padding: 40px;
+        border-radius: 25px;
         text-align: center;
         margin: 20px 0;
+        box-shadow: 
+            0 15px 35px rgba(0, 0, 0, 0.3),
+            0 5px 15px rgba(255, 215, 0, 0.4);
+        animation: victory-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes victory-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
     }
     
     .game-over-screen {
-        background: rgba(139, 0, 0, 0.8);
+        background: linear-gradient(135deg, rgba(255, 107, 107, 0.9) 0%, rgba(139, 0, 0, 0.9) 100%);
         padding: 30px;
         border-radius: 20px;
         text-align: center;
         margin: 20px 0;
-        border: 2px solid #FF6B6B;
+        border: 3px solid #ff6b6b;
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
     }
     
     .stButton > button {
-        background: linear-gradient(45deg, #4CAF50, #45a049);
+        background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
         color: white;
         border: none;
         padding: 15px 30px;
-        font-size: 16px;
-        border-radius: 10px;
+        font-size: 18px;
+        font-weight: 700;
+        border-radius: 15px;
         cursor: pointer;
-        transition: all 0.3s;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        box-shadow: 
+            0 6px 20px rgba(0, 212, 255, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
         width: 100%;
         min-height: 80px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-family: 'Orbitron', monospace;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+        transform: translateY(-3px);
+        box-shadow: 
+            0 10px 25px rgba(255, 107, 107, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    
+    .stButton > button:active {
+        transform: translateY(-1px);
     }
     
     .stProgress > div > div > div {
-        background: linear-gradient(90deg, #FFD700, #FFA500);
+        background: linear-gradient(90deg, #00d4ff 0%, #ff6b6b 50%, #ffd700 100%);
+        height: 8px;
+        border-radius: 4px;
+    }
+    
+    .stProgress > div > div {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+    
+    .game-instruction {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(255, 107, 107, 0.1) 100%);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid rgba(0, 212, 255, 0.3);
+        margin: 20px 0;
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 600;
+    }
+    
+    .image-container {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        border: 3px solid transparent;
+        border-radius: 20px;
+        padding: 15px;
+        margin: 15px 0;
+        transition: all 0.3s ease;
+        box-shadow: 
+            0 8px 25px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    
+    .image-container:hover {
+        border: 3px solid #00d4ff;
+        transform: translateY(-5px);
+        box-shadow: 
+            0 15px 35px rgba(0, 212, 255, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    
+    .progress-text {
+        color: #00d4ff;
+        font-weight: 700;
+        font-size: 1.1em;
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+    }
+    
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #00d4ff, #ff6b6b);
+        border-radius: 4px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -130,7 +262,6 @@ def load_images():
         
         # Try local images first (instant!)
         if has_local_images(story_index):
-            st.success("⚡ Loading high-quality images...")
             local_images = load_local_images(story_index)
             
             if local_images:
@@ -166,8 +297,8 @@ def wrong_answer():
     st.rerun()
 
 # Header
-st.markdown('<h1 class="main-title">⚔️ Bode the Knight ⚔️</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">A Magical Reading Adventure</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">⚔️ BODE THE KNIGHT ⚔️</h1>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">🎮 EPIC READING ADVENTURE QUEST 🎮</p>', unsafe_allow_html=True)
 
 # Game Won Screen
 if st.session_state.game_won:
@@ -219,23 +350,13 @@ current_data = STORY_DATA[st.session_state.current_story]
 # Progress
 progress = (st.session_state.current_story + 1) / len(STORY_DATA)
 st.progress(progress)
-st.markdown(f"**Quest Progress: {st.session_state.current_story + 1} of {len(STORY_DATA)}**")
-
-# Show local image availability
-local_count = count_local_images()
-if local_count > 0:
-    st.info(f"🎨 {local_count}/20 stories have high-quality AI images!")
-
-# Show cache statistics
-cache_stats = get_cache_stats()
-if cache_stats['cached_stories'] > 0:
-    st.info(f"⚡ {cache_stats['cached_stories']}/20 stories cached for instant loading! ({cache_stats['percentage']:.0f}%)")
+st.markdown(f'<div class="progress-text">🎯 QUEST PROGRESS: {st.session_state.current_story + 1} of {len(STORY_DATA)} COMPLETED</div>', unsafe_allow_html=True)
 
 # Story
 st.markdown(f"""
 <div class="story-text">
-    <h3>📖 The Story:</h3>
-    <p style="font-size: 1.3em; color: #FFD700;"><strong>{current_data['text']}</strong></p>
+    <h3>📖 THE STORY:</h3>
+    <p style="font-size: 1.3em; color: #00d4ff; font-weight: 700;">{current_data['text']}</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -243,7 +364,12 @@ st.markdown(f"""
 load_images()
 
 # Instructions
-st.markdown("### 🎯 Which picture matches the story?")
+st.markdown("""
+<div class="game-instruction">
+    <h3>🎯 CHOOSE YOUR ANSWER!</h3>
+    <p>Which picture matches the story? Click to select!</p>
+</div>
+""", unsafe_allow_html=True)
 
 # Display options with fixed formatting
 if st.session_state.current_images:
@@ -251,29 +377,33 @@ if st.session_state.current_images:
     
     for i, (col, item) in enumerate(zip([col1, col2, col3], st.session_state.current_images)):
         with col:
+            st.markdown('<div class="image-container">', unsafe_allow_html=True)
+            
             if 'image' in item:  # AI image
-                st.image(item['image'], width=300)  # Fixed width instead of use_column_width
+                st.image(item['image'], width=300)
             else:  # Emoji fallback
                 st.markdown(f"""
                 <div style="
                     font-size: 4em; 
                     text-align: center; 
                     padding: 40px 20px; 
-                    background: rgba(255, 255, 255, 0.1); 
+                    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(255, 107, 107, 0.1));
                     border-radius: 15px; 
                     margin: 10px 0;
-                    border: 2px solid #FFD700;
                     min-height: 200px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    border: 2px solid rgba(0, 212, 255, 0.3);
                 ">
                     {item["emoji"]}
                 </div>
                 """, unsafe_allow_html=True)
             
-            # Button with better spacing
-            if st.button(f"Choose Picture {i+1}", key=f"btn_{i}", use_container_width=True):
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Gaming-style button
+            if st.button(f"🎮 SELECT {i+1}", key=f"btn_{i}", use_container_width=True):
                 if item['is_correct']:
                     correct_answer()
                 else:
@@ -282,8 +412,9 @@ if st.session_state.current_images:
 # Prize bag
 if st.session_state.prizes:
     st.markdown('<div class="prize-bag">', unsafe_allow_html=True)
-    st.markdown("### 🎒 Your Prize Bag:")
-    st.markdown(" | ".join(st.session_state.prizes))
+    st.markdown("### 🎒 YOUR LOOT COLLECTION:")
+    prize_display = " | ".join([f"**{prize}**" for prize in st.session_state.prizes])
+    st.markdown(f"<p style='color: #ffd700; font-size: 1.1em; font-weight: 700;'>{prize_display}</p>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Reset button
