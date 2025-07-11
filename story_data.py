@@ -3,8 +3,8 @@ STORY_DATA = [
         "text": "Bode the Knight wakes up in his cozy castle bedroom.",
         "correct_concept": "waking up in a medieval castle bedroom with stone walls and morning sunlight",
         "wrong_concepts": [
-            "reading a book while sitting on castle bedroom chair",  # CHANGED
-            "waking up in a modern house bedroom with regular furniture"
+            "reading a book while sitting on castle bedroom chair",
+            "waking up in a bright modern apartment bedroom with glass windows and city view"  # CHANGED - more obviously different
         ],
         "prize": "⚔️ Iron Sword"
     },
@@ -28,10 +28,10 @@ STORY_DATA = [
     },
     {
         "text": "A messenger arrives with urgent news about the town.",
-        "correct_concept": "receiving an important scroll from a messenger on horseback",
+        "correct_concept": "standing at castle gate while a messenger on horseback hands him an important scroll with worried expression",  # CHANGED - more specific
         "wrong_concepts": [
-            "handing a scroll to a messenger who is leaving",
-            "reading a regular letter that is not urgent news"
+            "sitting alone at a desk writing a letter with a quill pen",  # CHANGED - very different activity
+            "reading a regular book for fun in a library"  # CHANGED - clearly not urgent news
         ],
         "prize": "👑 Knight's Crown"
     },
@@ -39,7 +39,7 @@ STORY_DATA = [
         "text": "The dragon is breathing fire and scaring everyone!",
         "correct_concept": "large dragon breathing orange flames while villagers look worried",
         "wrong_concepts": [
-            "peaceful dragon resting calmly in a cave without fire",
+            "dragon and villagers having a friendly picnic together with food and smiles",  # CHANGED - obviously opposite
             "dragon playing gently with happy village children"
         ],
         "prize": "💎 Ruby Gem"
@@ -48,8 +48,8 @@ STORY_DATA = [
         "text": "Bode saddles his brave white horse for the journey.",
         "correct_concept": "placing a leather saddle carefully on a white horse",
         "wrong_concepts": [
-            "riding the white horse that already has a saddle on",
-            "feeding hay to a white horse in the stable"  # CHANGED
+            "brushing and grooming a white horse with a brush instead of saddling",  # CHANGED - different activity
+            "riding a bright red horse that is already saddled"  # CHANGED - very different colored horse
         ],
         "prize": "🗡️ Silver Sword"
     },
